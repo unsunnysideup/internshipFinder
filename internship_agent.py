@@ -27,17 +27,16 @@ if not GROQ_API_KEY or not TAVILY_API_KEY:
         "GROQ_API_KEY and TAVILY_API_KEY."
     )
 
-CSV_PATH = os.path.expanduser("~/internships/2027_summer_data_internships.csv")
+CSV_PATH = os.path.join(os.path.dirname(__file__), "internships", "2027_summer_data_internships.csv")
 
 SEARCH_QUERIES = [
     "2027 summer data analyst intern undergraduate apply now",
     "2027 summer data scientist intern undergraduate open application",
-    "2027 summer business intelligence intern undergraduate",
     "2027 summer analytics intern undergraduate new posting",
     "site:linkedin.com 2027 summer data analyst intern undergraduate",
     "site:greenhouse.io OR site:lever.co 2027 summer data analyst intern",
     "2027 summer data science intern FAANG tech undergraduate",
-    "2027 summer data intern finance undergraduate new york",
+    "2027 summer data intern undergraduate",
 ]
 
 CSV_COLUMNS = [
@@ -104,14 +103,16 @@ Return ONLY a JSON array. Each object must have exactly these keys:
 - company: company name
 - location: city/state or Remote or Hybrid
 - work_model: Onsite / Remote / Hybrid / Unknown
-- type: Data Analyst / Data Scientist / Data Analytics / Business Intelligence / Quant
+- type: Data Analyst / Data Scientist / Data Analytics
 - pay: pay rate if mentioned, else Unknown
 - status: Open / Closed / Unknown
 - notes: one sentence max about the role
 - url: direct application URL if available, else company careers page
 
 Only include roles that are:
-1. For summer 2027 (not 2026 or earlier)
+1. Explicitly labeled "Summer 2027" or "2027" in the title or description.
+   EXCLUDE anything labeled 2026, 2025, or any year other than 2027.
+   If the year is ambiguous or not mentioned, EXCLUDE it.
 2. For undergraduates (not PhD-only)
 3. In data analyst, data scientist, analytics, or BI — not pure software engineering
 
