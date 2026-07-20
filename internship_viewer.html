@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Internship Tracker — Tiffany Sun</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #f5f5f3;
+    color: #1a1a1a;
+    min-height: 100vh;
+  }
+
+  header {
+    background: #fff;
+    border-bottom: 1px solid #e5e5e5;
+    padding: 20px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  header h1 { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+  header p  { font-size: 13px; color: #888; margin-top: 2px; }
+
+  #stats {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+  }
+
+  .stat { text-align: right; }
+  .stat-num { font-size: 20px; font-weight: 600; line-height: 1; }
+  .stat-label { font-size: 11px; color: #999; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.04em; }
+
+  .controls {
+    padding: 16px 32px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    background: #f5f5f3;
+    border-bottom: 1px solid #e8e8e6;
+  }
+
+  .controls label { font-size: 12px; color: #666; margin-right: 2px; }
+
+  select, input[type="text"] {
+    font-size: 13px;
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background: #fff;
+    color: #1a1a1a;
+    outline: none;
+    cursor: pointer;
+  }
+
+  select:focus, input[type="text"]:focus { border-color: #999; }
+
+  input[type="text"] { width: 220px; cursor: text; }
+
+  #upload-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 64px 32px;
+    text-align: center;
+  }
+
+  #upload-area h2 { font-size: 18px; font-weight: 500; margin-bottom: 8px; }
+  #upload-area p  { font-size: 14px; color: #888; margin-bottom: 24px; }
+
+  #file-input { display: none; }
+
+  .upload-btn {
+    display: inline-block;
+    padding: 10px 24px;
+    background: #1a1a1a;
+    color: #fff;
+    font-size: 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    border: none;
+  }
+
+  .upload-btn:hover { background: #333; }
+
+  #drop-zone {
+    border: 2px dashed #ccc;
+    border-radius: 12px;
+    padding: 40px 60px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+
+  #drop-zone.drag-over { border-color: #1a1a1a; background: #fafafa; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  thead th {
+    background: #fff;
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 500;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #888;
+    border-bottom: 1px solid #e5e5e5;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  thead th:hover { color: #333; }
+  thead th.sorted { color: #1a1a1a; }
+
+  tbody tr {
+    background: #fff;
+    border-bottom: 1px solid #f0f0ee;
+    transition: background 0.1s;
+  }
+
+  tbody tr:hover { background: #fafaf8; }
+
+  td {
+    padding: 11px 14px;
+    vertical-align: middle;
+    max-width: 200px;
+  }
+
+  td.role-cell { max-width: 240px; }
+  td.notes-cell { max-width: 220px; color: #666; font-size: 12px; }
+
+  .role-name { font-weight: 500; color: #1a1a1a; }
+  .company-name { color: #555; font-size: 12px; margin-top: 2px; }
+
+  a.apply-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: #1a1a1a;
+    text-decoration: none;
+    font-size: 12px;
+    padding: 4px 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    white-space: nowrap;
+  }
+
+  a.apply-link:hover { background: #f5f5f3; border-color: #bbb; }
+
+  .badge {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .fit-strong  { background: #e6f4ea; color: #1e7e34; }
+  .fit-decent  { background: #e8f0fe; color: #1a56db; }
+  .fit-reach   { background: #fff3cd; color: #856404; }
+  .fit-not     { background: #f5f5f5; color: #888; }
+  .fit-unknown { background: #f5f5f5; color: #aaa; }
+
+  .type-badge {
+    background: #f0f0ee;
+    color: #555;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+  }
+
+  .pay { font-size: 12px; color: #444; white-space: nowrap; }
+  .location { font-size: 12px; color: #555; }
+  .date { font-size: 11px; color: #aaa; white-space: nowrap; }
+
+  .table-wrap {
+    padding: 0 32px 32px;
+    overflow-x: auto;
+  }
+
+  #no-results {
+    text-align: center;
+    padding: 48px;
+    color: #aaa;
+    font-size: 14px;
+    display: none;
+  }
+
+  .sort-arrow { margin-left: 4px; opacity: 0.4; }
+  .sorted .sort-arrow { opacity: 1; }
+
+  #row-count {
+    font-size: 12px;
+    color: #999;
+    margin-left: auto;
+    white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Internship Tracker</h1>
+    <p>Tiffany Sun — 2027 Summer Data Roles</p>
+  </div>
+  <div id="stats">
+    <div class="stat"><div class="stat-num" id="s-total">—</div><div class="stat-label">Total</div></div>
+    <div class="stat"><div class="stat-num" id="s-strong">—</div><div class="stat-label">Strong Fit</div></div>
+    <div class="stat"><div class="stat-num" id="s-new">—</div><div class="stat-label">This Week</div></div>
+  </div>
+</header>
+
+<div id="upload-area">
+  <div id="drop-zone" onclick="document.getElementById('file-input').click()"
+       ondragover="event.preventDefault(); this.classList.add('drag-over')"
+       ondragleave="this.classList.remove('drag-over')"
+       ondrop="handleDrop(event)">
+    <h2>Drop your CSV here</h2>
+    <p>or click to select <code>2027_summer_data_internships.csv</code></p>
+    <label class="upload-btn">Choose file</label>
+  </div>
+  <input type="file" id="file-input" accept=".csv" onchange="handleFile(this.files[0])">
+</div>
+
+<div id="main" style="display:none">
+  <div class="controls">
+    <label>Fit</label>
+    <select id="filter-fit" onchange="applyFilters()">
+      <option value="">All</option>
+      <option value="Strong Fit">Strong Fit</option>
+      <option value="Decent Fit">Decent Fit</option>
+      <option value="Reach">Reach</option>
+      <option value="Not a Fit Yet">Not a Fit Yet</option>
+    </select>
+
+    <label>Type</label>
+    <select id="filter-type" onchange="applyFilters()">
+      <option value="">All types</option>
+    </select>
+
+    <label>Model</label>
+    <select id="filter-model" onchange="applyFilters()">
+      <option value="">All</option>
+      <option value="Remote">Remote</option>
+      <option value="Hybrid">Hybrid</option>
+      <option value="Onsite">Onsite</option>
+    </select>
+
+    <input type="text" id="search" placeholder="Search role or company…" oninput="applyFilters()">
+    <span id="row-count"></span>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th onclick="sortBy('Role')" id="th-Role">Role / Company <span class="sort-arrow">↕</span></th>
+          <th onclick="sortBy('Location')" id="th-Location">Location <span class="sort-arrow">↕</span></th>
+          <th onclick="sortBy('Type')" id="th-Type">Type <span class="sort-arrow">↕</span></th>
+          <th onclick="sortBy('Pay (est.)')" id="th-Pay">Pay <span class="sort-arrow">↕</span></th>
+          <th onclick="sortBy('Tiffany\'s Fit')" id="th-Fit">Fit <span class="sort-arrow">↕</span></th>
+          <th>Fit Reason</th>
+          <th onclick="sortBy('Date Found')" id="th-Date">Found <span class="sort-arrow">↕</span></th>
+          <th>Apply</th>
+        </tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
+    <div id="no-results">No matching internships found.</div>
+  </div>
+</div>
+
+<script>
+let allRows = [];
+let sortCol = "Priority";
+let sortAsc = true;
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('drop-zone').classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) handleFile(file);
+}
+
+function handleFile(file) {
+  const reader = new FileReader();
+  reader.onload = e => parseCSV(e.target.result);
+  reader.readAsText(file);
+}
+
+function parseCSV(text) {
+  const lines = text.trim().split("\n");
+  const headers = parseCSVLine(lines[0]);
+  allRows = lines.slice(1).map(line => {
+    const vals = parseCSVLine(line);
+    const obj = {};
+    headers.forEach((h, i) => obj[h.trim()] = (vals[i] || "").trim());
+    return obj;
+  }).filter(r => r["Role"]);
+
+  // Populate type filter
+  const types = [...new Set(allRows.map(r => r["Type"]).filter(Boolean))].sort();
+  const sel = document.getElementById("filter-type");
+  types.forEach(t => {
+    const opt = document.createElement("option");
+    opt.value = t; opt.textContent = t;
+    sel.appendChild(opt);
+  });
+
+  document.getElementById("upload-area").style.display = "none";
+  document.getElementById("main").style.display = "block";
+  applyFilters();
+}
+
+function parseCSVLine(line) {
+  const result = [];
+  let cur = "", inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQuotes && line[i+1] === '"') { cur += '"'; i++; }
+      else inQuotes = !inQuotes;
+    } else if (ch === ',' && !inQuotes) {
+      result.push(cur); cur = "";
+    } else {
+      cur += ch;
+    }
+  }
+  result.push(cur);
+  return result;
+}
+
+function fitClass(fit) {
+  if (!fit) return "fit-unknown";
+  const f = fit.toLowerCase();
+  if (f.includes("strong")) return "fit-strong";
+  if (f.includes("decent")) return "fit-decent";
+  if (f.includes("reach"))  return "fit-reach";
+  if (f.includes("not"))    return "fit-not";
+  return "fit-unknown";
+}
+
+function priorityOrder(p) {
+  if (!p) return 99;
+  const n = parseInt(p);
+  return isNaN(n) ? 99 : n;
+}
+
+function applyFilters() {
+  const fit   = document.getElementById("filter-fit").value.toLowerCase();
+  const type  = document.getElementById("filter-type").value.toLowerCase();
+  const model = document.getElementById("filter-model").value.toLowerCase();
+  const q     = document.getElementById("search").value.toLowerCase();
+
+  let rows = allRows.filter(r => {
+    if (fit   && !r["Tiffany's Fit"]?.toLowerCase().includes(fit))   return false;
+    if (type  && r["Type"]?.toLowerCase() !== type)                   return false;
+    if (model && r["Work Model"]?.toLowerCase() !== model)            return false;
+    if (q     && !r["Role"]?.toLowerCase().includes(q)
+              && !r["Company"]?.toLowerCase().includes(q))            return false;
+    return true;
+  });
+
+  // Sort
+  rows.sort((a, b) => {
+    let va = a[sortCol] || "", vb = b[sortCol] || "";
+    if (sortCol === "Priority") { va = priorityOrder(va); vb = priorityOrder(vb); }
+    if (va < vb) return sortAsc ? -1 : 1;
+    if (va > vb) return sortAsc ? 1 : -1;
+    return 0;
+  });
+
+  renderTable(rows);
+
+  // Update stats
+  const thisWeek = new Date(); thisWeek.setDate(thisWeek.getDate() - 7);
+  document.getElementById("s-total").textContent  = allRows.length;
+  document.getElementById("s-strong").textContent = allRows.filter(r => r["Tiffany's Fit"]?.includes("Strong")).length;
+  document.getElementById("s-new").textContent    = allRows.filter(r => {
+    const d = new Date(r["Date Found"]); return d >= thisWeek;
+  }).length;
+  document.getElementById("row-count").textContent = `${rows.length} of ${allRows.length} shown`;
+}
+
+function renderTable(rows) {
+  const tbody = document.getElementById("table-body");
+  tbody.innerHTML = "";
+  document.getElementById("no-results").style.display = rows.length ? "none" : "block";
+
+  rows.forEach(r => {
+    const tr = document.createElement("tr");
+    const url = r["Apply URL"] || "";
+    const applyBtn = url
+      ? `<a class="apply-link" href="${url}" target="_blank">Apply ↗</a>`
+      : `<span style="color:#ccc;font-size:12px">—</span>`;
+
+    const date = r["Date Found"] && r["Date Found"] !== "pre-agent"
+      ? r["Date Found"] : "—";
+
+    tr.innerHTML = `
+      <td class="role-cell">
+        <div class="role-name">${esc(r["Role"] || "")}</div>
+        <div class="company-name">${esc(r["Company"] || "")}</div>
+      </td>
+      <td><div class="location">${esc(r["Location"] || "")}</div>
+          <div style="font-size:11px;color:#aaa;margin-top:2px">${esc(r["Work Model"] || "")}</div></td>
+      <td><span class="type-badge">${esc(r["Type"] || "")}</span></td>
+      <td class="pay">${esc(r["Pay (est.)"] || "—")}</td>
+      <td><span class="badge ${fitClass(r["Tiffany's Fit"])}">${esc(r["Tiffany's Fit"] || "—")}</span></td>
+      <td class="notes-cell">${esc(r["Fit Reason"] || r["Notes"] || "")}</td>
+      <td class="date">${esc(date)}</td>
+      <td>${applyBtn}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function sortBy(col) {
+  if (sortCol === col) sortAsc = !sortAsc;
+  else { sortCol = col; sortAsc = true; }
+  document.querySelectorAll("thead th").forEach(th => th.classList.remove("sorted"));
+  const id = "th-" + col.replace(/[^a-zA-Z]/g, "");
+  const el = document.getElementById(id);
+  if (el) el.classList.add("sorted");
+  applyFilters();
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+</script>
+</body>
+</html>
