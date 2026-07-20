@@ -94,8 +94,10 @@ def search_web(tavily, query):
 
 def find_apply_url(tavily, role, company):
     """Do a targeted search for the direct application link."""
+    # Use key words from role to avoid grabbing wrong postings
+    role_keywords = " ".join(role.split()[:4])  # first 4 words of role title
     query = (
-        f'"{company}" "{role}" 2027 intern apply '
+        f'"{company}" "{role_keywords}" 2027 intern apply '
         f'site:greenhouse.io OR site:lever.co OR site:myworkdayjobs.com '
         f'OR site:careers.google.com OR site:jobs.apple.com OR site:jobs.lever.co'
     )
@@ -108,12 +110,14 @@ def find_apply_url(tavily, role, company):
         ]
         for r in result.get("results", []):
             url = r.get("url", "")
-            if any(d in url for d in good_domains):
+            title = r.get("title", "").lower()
+            # Make sure the result title loosely matches the role
+            role_words = [w.lower() for w in role.split() if len(w) > 3]
+            if any(w in title for w in role_words) and any(d in url for d in good_domains):
                 return url
     except Exception as e:
         print(f"  URL search error: {e}")
     return ""
-
 
 def clean_listing(listing):
     """Remove listings with bad URLs or too many unknowns."""
